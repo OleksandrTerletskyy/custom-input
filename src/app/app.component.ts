@@ -6,16 +6,21 @@ import { CurrencyPipe } from "./custom-input/custom-input.pipe";
   template:  
   `
   <div>
-    <span class="fieldname">Your balance is</span>: {{ balanceAmount | myCurrency }}
-    <br/>
-    <input type="text" [(ngModel)]="balanceAmount" thousandSeparator="\`" myCurrencyFormatter/>
+    <input type="text" [(ngModel)]="balanceAmount" [formatOptions]="formatOptions" custom-input/>
+
+    Amount is: {{balanceAmount}}
   </div>
   `
 })
 export class AppComponent {
-  name: string;
-  balanceAmount: string;
+  balanceAmount: number;
+  formatOptions = {
+      prefix : '',
+      decimalSep : "*",
+      // thousandsSep : "|",
+      // suffix : ' €'
+  };
   constructor(private mycurpipe: CurrencyPipe) {
-    this.balanceAmount = this.mycurpipe.transform("567.89");
+    this.balanceAmount = 1234567.89;
   }
 }
