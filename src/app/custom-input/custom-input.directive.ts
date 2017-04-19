@@ -3,6 +3,11 @@ import { Pipe, PipeTransform, OnChanges, SimpleChanges, Input, Provider, forward
 import { CurrencyPipe } from "./custom-input.pipe";
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from "@angular/forms";
 
+// Why we use ControlValueAccessor?
+// Because there is more control what gets into ngModel and when.
+
+// If we not use it, symbols like 1,232,123.2 $ get into it, that's not good
+
 const CUSTOM_VALUE_ACCESSOR: Provider = {
   provide: NG_VALUE_ACCESSOR,
   useExisting: forwardRef(() => CurrencyDirective),
@@ -22,20 +27,30 @@ export class CurrencyDirective implements OnInit, ControlValueAccessor {
         this.isFocused = false;
         this.refreshInput();
     }
+
+    // This checks entered symbols for corectness and cancels them in case they are not correct
     @HostListener('input') oninput = () => {
-        this.changeValueBackIfNotCorrect();
+        if(! this.changeValueBackIfNotCorrect()){
+            return;
+        }
         this.setNumericValue(parseFloat(this.value), false);
     }
+
+    // Every time we enter new symbol into input this checks if it is correct and if it is
+    // then we save correct value and get back into it when incorrect data received
     @HostListener('keydown') keypress = () => {
         if(this.isMatchingPattern(this.value))
         {
             this.lastCorrectValue = this.value;
         }
     };
-    changeValueBackIfNotCorrect() {
+
+    changeValueBackIfNotCorrect():boolean {
         if (!this.isMatchingPattern(this.value)) {
             this.value = this.lastCorrectValue;
+            return false;
         }
+        return true;
     }
 
     // ControlValueAccessor members
@@ -93,7 +108,6 @@ export class CurrencyDirective implements OnInit, ControlValueAccessor {
 
     set value(newVal: string){
         this._renderer.setElementProperty(this.el, 'value', newVal);
-        // this.onChange(newVal);
     }
 
     get value(): string{
