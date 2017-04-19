@@ -30,6 +30,7 @@ export class CurrencyDirective implements OnInit, ControlValueAccessor {
 
     // This checks entered symbols for corectness and cancels them in case they are not correct
     @HostListener('input') oninput = () => {
+        if(this.value == '') this.value = "0";
         if(! this.changeValueBackIfNotCorrect()){
             return;
         }
@@ -45,7 +46,7 @@ export class CurrencyDirective implements OnInit, ControlValueAccessor {
         }
     };
 
-    changeValueBackIfNotCorrect():boolean {
+    changeValueBackIfNotCorrect(): boolean {
         if (!this.isMatchingPattern(this.value)) {
             this.value = this.lastCorrectValue;
             return false;
@@ -55,7 +56,7 @@ export class CurrencyDirective implements OnInit, ControlValueAccessor {
 
     // ControlValueAccessor members
     writeValue(value: number): void {
-        let normalizedValue = value == null ? 0 : value;
+        let normalizedValue = value == null ? 0 : this.decimalAdjust('round', value, -2);
         this.setNumericValue(normalizedValue);
     }
     registerOnChange(fn: any): void {
@@ -73,7 +74,7 @@ export class CurrencyDirective implements OnInit, ControlValueAccessor {
 
     private lastCorrectValue: string;
     private el: any;
-    private decimalPattern = "^-?[0-9]+(\.[0-9]{0,2})?$";
+    private decimalPattern = '^-?[0-9]+(\\.[0-9]{0,2})?$';
     @Input() private formatOptions;
 
     private isFocused: boolean = false;
@@ -119,6 +120,30 @@ export class CurrencyDirective implements OnInit, ControlValueAccessor {
     }
 
     isMatchingPattern(val: string): boolean {
-      return (new RegExp(this.decimalPattern).test(this.value));
+        let result: boolean = new RegExp(this.decimalPattern).test(val)
+        return result;
     }
+
+    decimalAdjust(type, value, exp) {
+        // If the exp is undefined or zero...
+        if (typeof exp === 'undefined' || +exp === 0) {
+        return Math[type](value);
+        }
+        value = +value;
+        exp = +exp;
+        // If the value is not a number or the exp is not an integer...
+        if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+        return NaN;
+        }
+        // If the value is negative...
+        if (value < 0) {
+        return -this.decimalAdjust(type, -value, exp);
+        }
+        // Shift
+        value = value.toString().split('e');
+        value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+        // Shift back
+        value = value.toString().split('e');
+        return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
+  }
 }
