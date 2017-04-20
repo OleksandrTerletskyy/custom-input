@@ -9,7 +9,7 @@ export class CurrencyPipe implements PipeTransform {
         prefix : '',
         decimalSep : ".",
         thousandsSep : ",",
-        suffix : ' $'
+        suffix : ''
     };
 
   transform(value: string, formatOptions: any ,fractionSize: number = 2): string {

@@ -72,10 +72,13 @@ export class CurrencyDirective implements OnInit, ControlValueAccessor {
     private onChange = (_: any) => {};
     private onTouched = () => {};
 
+    private userLang = window.navigator.language;
     private lastCorrectValue: string;
     private el: any;
     private decimalPattern = '^-?[0-9]+(\\.[0-9]{0,2})?$';
+
     @Input() private formatOptions;
+    @Input() private currency: string;
 
     private isFocused: boolean = false;
 
@@ -91,7 +94,18 @@ export class CurrencyDirective implements OnInit, ControlValueAccessor {
             this.value = this.getNumericValue().toString();
             return;
         }
-        this.value = this.currencyPipe.transform(this.getNumericValue().toString(), this.formatOptions);
+        if(this.formatOptions){
+            if(!this.formatOptions.suffix && this.currency){
+                this.formatOptions.suffix = ' ' + this.currency;
+            }
+            this.value = this.currencyPipe.transform(this.getNumericValue().toString(), this.formatOptions);
+            return;
+        }
+        if(this.currency){
+            this.value = this.getNumericValue().toLocaleString(this.userLang, { style: 'currency', currency: this.currency })
+            return;
+        }
+        this.value = this.getNumericValue().toLocaleString();
     }
 
     private numericVal:number;
